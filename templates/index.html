@@ -40,16 +40,16 @@
 
   <div class="sixteen wide column">
     <div class="ui container">
-      <table class="ui very basic table">
+      <table class="ui basic sortable table">
         <thead>
           <tr>
-            <th></th>
+            <th class="no-sort"></th>
             <th>Name</th>
             <th>Roaster</th>
-            <th>Description</th>
+            <th class="no-sort">Description</th>
             <th>Region</th>
             <th>Size</th>
-            <th>Notes</th>
+            <th class="no-sort">Notes</th>
             <th>Price</th>
           </tr>
         </thead>
@@ -81,6 +81,11 @@
 </div>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.1.8/semantic.min.js"></script>
-
+<script src="{{ url_for('static', filename='jquery.tablesort.min.js') }}"></script>
+<script>
+  $(document).ready(function(){
+    $('table').tablesort()
+  })
+</script>
 </body>
 </html>
