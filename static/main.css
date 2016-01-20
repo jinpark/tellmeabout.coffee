@@ -1,3 +1,11 @@
 div.full-width {
     width: 100%;
 }
+
+.ui.sortable.table thead th.no-sort {
+    cursor: default;
+}
+
+.ui.sortable.table thead th.no-sort:hover {
+    background: rgba(0,0,0,0);
+}
