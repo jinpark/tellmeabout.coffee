@@ -1,6 +1,7 @@
 from flask import Flask, render_template, send_file, send_from_directory
 from google.appengine.ext import ndb
 from google.appengine.api import images
+from google.appengine.api import mail
 import io
 import datetime
 from models import Coffee
@@ -53,6 +54,7 @@ def cron_scrape():
         scrapers.scrape_stumptown()
         scrapers.scrape_heart()
         scrapers.scrape_bluebottle()
+        mail.send_mail(sender_address, user_address, subject, body)
     except Exception as e:
         logging.warning("Error: {}".format(e))
     return "Finished scraping"
