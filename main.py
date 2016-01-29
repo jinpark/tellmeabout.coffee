@@ -19,6 +19,11 @@ def index():
     coffees = Coffee.query(Coffee.active==True).fetch()
     return render_template('index.html', coffees=coffees)
 
+@app.route('/test')
+def test():
+    """Lists the coffeez"""
+    return render_template('test.html')
+
 @app.route('/images/coffee/<int:coffee_id>')
 def get_coffee_image(coffee_id):
     """Gets the image attached to the coffee"""
