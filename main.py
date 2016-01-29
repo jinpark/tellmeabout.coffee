@@ -1,6 +1,7 @@
 from flask import Flask, render_template, send_file, send_from_directory
 from google.appengine.ext import ndb
 from google.appengine.api import images
+from google.appengine.api import mail
 import io
 import datetime
 from models import Coffee
@@ -53,8 +54,10 @@ def cron_scrape():
         scrapers.scrape_stumptown()
         scrapers.scrape_heart()
         scrapers.scrape_bluebottle()
-    except Exception as e:
+        mail.send_mail(sender='billy@billyfung.com', to=['billy@billyfung.com','jin@jinpark.net'], subject='{} Scrape Complete'.format(time.strftime("%a, %d %b %Y %X", time.gmtime())), body ='body of email')
+    except Exception as e:  
         logging.warning("Error: {}".format(e))
+        mail.send_mail(sender='billy@billyfung.com', to=['billy@billyfung.com','jin@jinpark.net'], subject='{} Scrape Failed'.format(time.strftime("%a, %d %b %Y %X", time.gmtime())), body ='scrape failed')
     return "Finished scraping"
 
 @app.route('/cron/check_active_coffees')
