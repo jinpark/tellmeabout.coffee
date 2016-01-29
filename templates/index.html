@@ -11,7 +11,16 @@
   <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.1.8/semantic.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='tablesort-modified.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
+  <link href='https://api.mapbox.com/mapbox.js/v2.2.4/mapbox.css' rel='stylesheet' />
+  <style>
+  #map { width:100%; height: 300px; }
+  .leaflet-popup { width:240px; }
+  .leaflet-popup button {
+    float:right;
+    height:30px;
+    line-height:10px;
+    }
+  </style>
 </head>
 
 <body>
@@ -20,6 +29,14 @@
 <div class="ui menu">
   <div class="ui container">
     <h2 class="active item">Tell Me About Coffee</h2>
+  </div>
+</div>
+
+<div class="ui grid">
+  <div class="sixteen wide column">
+    <div class="ui container">
+      <div id='map'></div>
+    </div>
   </div>
 </div>
 
@@ -87,6 +104,9 @@
 <script src="{{ url_for('static', filename='jquery.tablesorter.combined.min.js') }}"></script>
 <script src="{{ url_for('static', filename='widget-filter.min.js') }}"></script>
 <script src="{{ url_for('static', filename='widget-lazyload.min.js') }}"></script>
+<script src='https://api.mapbox.com/mapbox.js/v2.2.4/mapbox.js'></script>
+<script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-pip/v0.0.2/leaflet-pip.js'></script>
+
 <script>
   $(document).ready(function(){
     $('table').tablesorter({
@@ -107,7 +127,123 @@
     }).bind('filterEnd sortEnd', function(e, filter){
       $('table').trigger( 'lazyloadUpdate' );
     })
-  })
+  });
+
+  $(document).ready(function(){
+    L.mapbox.accessToken = 'pk.eyJ1IjoiamlucGFyayIsImEiOiJjaWp5N2M0OWwxbmRydndtNTBpdG4xbWRnIn0.Hy-g2odH5c_mCv03BFkWNw';
+    var map = L.mapbox.map('map', 'mapbox.light')
+        .setView([38, -95], 4);
+
+
+    var countriesLayer = L.mapbox.featureLayer()
+        .loadURL("{{ url_for('static', filename='countries.geojson') }}")
+        .on('click', handleClick)
+        .on('ready', resetStyles)
+        .addTo(map);
+
+    var layers = [
+        { name: 'Country', layer: countriesLayer }
+    ];
+
+    // This is the default style of layers when the user isn't interacting
+    // with the map
+    var quiet = {
+        fillColor: '#222',
+        fillOpacity: 0.0,
+        opacity: 0.0,
+        weight: 1
+    };
+
+    // The style of a layer that's been filtered to but not the specific
+    // shape the user selected
+    var medium = {
+        fillColor: '#255',
+        fillOpacity: 0.4,
+        opacity: 1,
+        weight: 1
+    };
+
+    // The specific shape selected
+    var loud = {
+        fillColor: '#2ff',
+        fillOpacity: 0.8,
+        opacity: 0.2,
+        weight: 1
+    };
+
+    // When the user resets the map by closing the popup, reset styles
+    function resetStyles() {
+        for (var i = 0; i < layers.length; i++) {
+            layers[i].layer.setStyle(quiet);
+        }
+    }
+
+    map.on('popupclose', function() {
+        resetStyles();
+    });
+
+    function handleClick(e) {
+        var html = '';
+        // look through each layer in order and see if the clicked point,
+        // e.latlng, overlaps with one of the shapes in it.
+        for (var i = 0; i < layers.length; i++) {
+            var match = leafletPip.pointInLayer(
+                // the clicked point
+                e.latlng,
+                // this layer
+                layers[i].layer,
+                // whether to stop at first match
+                true);
+            // if there's overlap, add some content to the popup: the layer name
+            // and a table of attributes
+            if (match.length) {
+                html += '<strong>' + layers[i].name +
+                    '<button onclick="highlightMatch(this)" data-layer="' + i +
+                    '" data-latlng="' +
+                    [e.latlng.lat, e.latlng.lng] +
+                    '">highlight</button></strong>';
+                html += propertyTable(match[0].feature.properties);
+            }
+        }
+        if (html) {
+            map.openPopup(html, e.latlng);
+        }
+    }
+
+    // To highlight a layer, we make all other layers quiet and then re-run
+    // the point in polygon match on that layer
+    function highlightMatch(that) {
+        var layer = layers[that.dataset.layer].layer,
+            latlng = L.latLng(that.dataset.latlng.split(','));
+
+        for (var i = 0; i < layers.length; i++) {
+            if (layers[i].layer == layer) {
+                var match = leafletPip.pointInLayer(latlng, layers[i].layer, true);
+                layers[i].layer.eachLayer(function(shape) {
+                    if (match[0] == shape) {
+                        // the one shape that is matched becomes loud and clear
+                        shape.setStyle(loud);
+                    } else {
+                        shape.setStyle(medium);
+                    }
+                });
+            } else {
+                layers[i].layer.setStyle(quiet);
+            }
+        }
+    }
+
+    // create a simple table from the properties in a feature, like the
+    // name of a state or district
+    function propertyTable(o) {
+        var t = '<table>';
+        for (var k in o) {
+            t += '<tr><th>' + k + '</th><td>' + o[k] + '</td></tr>';
+        }
+        t += '</table>';
+        return t;
+    }
+  });
 </script>
 
 </body>
