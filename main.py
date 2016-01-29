@@ -54,9 +54,10 @@ def cron_scrape():
         scrapers.scrape_stumptown()
         scrapers.scrape_heart()
         scrapers.scrape_bluebottle()
-        mail.send_mail(sender_address, user_address, subject, body)
-    except Exception as e:
+        mail.send_mail(sender='billy@billyfung.com', to=['billy@billyfung.com','jin@jinpark.net'], subject='{} Scrape Complete'.format(time.strftime("%a, %d %b %Y %X", time.gmtime())), body ='body of email')
+    except Exception as e:  
         logging.warning("Error: {}".format(e))
+        mail.send_mail(sender='billy@billyfung.com', to=['billy@billyfung.com','jin@jinpark.net'], subject='{} Scrape Failed'.format(time.strftime("%a, %d %b %Y %X", time.gmtime())), body ='scrape failed')
     return "Finished scraping"
 
 @app.route('/cron/check_active_coffees')
