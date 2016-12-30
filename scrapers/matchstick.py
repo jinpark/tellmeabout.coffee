@@ -55,7 +55,7 @@ def scrape_matchstick():
             product_info.find('strong').decompose()
         description = product_info.text.strip()
         image_container = coffee_soup.select_one('div#ProductPhoto')
-        image_url = 'http://' + image_container.find('img')['src'].strip('//')
+        image_url = 'http:' + image_container.find('img')['src']
         image_content = requests.get(image_url).content
         coffee_data = {
             'name': name,
