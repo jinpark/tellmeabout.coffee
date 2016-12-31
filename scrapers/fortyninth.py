@@ -9,7 +9,7 @@ def scrape_fortyninth():
     roaster = '49th Parallel'
     base_url = 'http://49thcoffee.com/collections/coffee'
     r = requests.get(base_url)
-    soup = BeautifulSoup(r.content)
+    soup = BeautifulSoup(r.content, "html.parser")
     coffees_for_sale = soup.find_all('li', {'class':'product-listing'})
     total_coffees = len(coffees_for_sale)
     coffees_entered = 0
@@ -17,7 +17,7 @@ def scrape_fortyninth():
     error_coffees = []
     ignored = ['Subscription']
     for item in coffees_for_sale:
-        name,description,notes,region,active,size, product_url = [""]*7
+        name, description, notes, region, active, size, product_url = [""]*7
         price = float()
         name = item.h1.string
         if any(word in name for word in ignored):
@@ -27,12 +27,17 @@ def scrape_fortyninth():
             product_url = 'http://49thcoffee.com' + url
             logging.info("Getting url: {}".format(product_url))
             r = requests.get(product_url)
-            coffee_soup = BeautifulSoup(r.content)
+            coffee_soup = BeautifulSoup(r.content, "html.parser")
             # logging.info("Title: {}".format(coffee_soup.title))
             details = coffee_soup.find('div', itemprop='description')
-            d = details.p
-            for sentence in d:
-                description += sentence.string
+            d = coffee_soup.find_all('p', {'class':'p1'})
+            if d == []:
+                try:
+                    description = details.span.string
+                except AttributeError:
+                    description = details.p.string
+            else:
+                description = d[0].string
             notes = details.h3.string.lower()
             notes = notes.split(' // ')
             region = coffee_soup.find('li', {'class':'product-detail-country'}).string.split()[1]
