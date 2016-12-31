@@ -33,9 +33,9 @@ def scrape_fortyninth():
             d = coffee_soup.find_all('p', {'class':'p1'})
             if d == []:
                 try:
-                    description = details.span.string
-                except AttributeError:
                     description = details.p.string
+                except AttributeError:
+                    description = details.span.string
             else:
                 description = d[0].string
             notes = details.h3.string.lower()
