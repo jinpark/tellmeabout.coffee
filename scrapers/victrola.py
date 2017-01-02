@@ -89,7 +89,6 @@ def scrape_victrola():
             'size': size,
             'image': image_content
         }
-        print(image_url)
         coffees_updated, coffees_entered, error_coffees = add_or_update_coffee(
             coffee_data, coffees_updated, coffees_entered, error_coffees)
 
