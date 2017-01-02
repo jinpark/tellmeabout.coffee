@@ -24,24 +24,29 @@ def scrape_victrola():
         if ignored in url:
             total_coffees = total_coffees - 1
             continue
-        name,description,notes,region,active,size, product_url = [""]*7
+        name, description, notes, region, active, size, product_url = [""] * 7
         price = int()
         product_url = base_url + url
         logging.info("Getting url: {}".format(url))
-        coffee_soup = BeautifulSoup(requests.get(product_url).content, "html.parser")
-        if coffee_soup.find('div', {'class': 'select single'}).find('label').text != 'Size':
+        coffee_soup = BeautifulSoup(
+            requests.get(product_url).content, "html.parser")
+        if coffee_soup.find(
+                'div',
+            {'class': 'select single'}).find('label').text != 'Size':
             # its sold out?
             total_coffees = total_coffees - 1
             continue
         name = coffee_soup.h2.string
         try:
-            size = coffee_soup.find('select').option.string.replace(" ", "")[:4]
+            size = coffee_soup.find('select').option.string.replace(" ",
+                                                                    "")[:4]
         except AttributeError:
             logging.info('Cannot find size for {}'.format(name))
             continue
         active = False
         if coffee_soup.find(itemprop='price'):
-            price = float(coffee_soup.find(itemprop='price').string.strip()[2:])
+            price = float(
+                coffee_soup.find(itemprop='price').string.strip()[2:])
             active = True
         description_raw = coffee_soup.select_one('h4.mobile').next_siblings
         if 'Blend' in name:
@@ -58,19 +63,37 @@ def scrape_victrola():
             flavor = coffee_soup(text=re.compile('Flavor:'))
             tasting_notes = coffee_soup.find(text="Tasting Notes")
             if flavor:
-                notes = flavor[1].string.strip()[8:].rstrip(',').lower().split(',')
+                notes = flavor[1].string.strip()[8:].rstrip(',').lower().split(
+                    ',')
             elif tasting_notes:
-                notes = coffee_soup.find(text="Tasting Notes").next_element.strip()[2:].rstrip(',').lower().split(',')
+                notes = coffee_soup.find(
+                    text="Tasting Notes").next_element.strip()[2:].rstrip(
+                        ',').lower().split(',')
             else:
                 # can't find any tasting notes
                 notes = []
                 logging.info('No tasting notes for {}'.format(product_url))
-        image_url = coffee_soup.select_one('ul.bx-slider').select_one('img')['src']
+        image_url = coffee_soup.select_one('ul.bx-slider').select_one('img')[
+            'src']
         image_content = requests.get("http:{}".format(image_url)).content
-        coffee_data = {'name':name, 'roaster':roaster, 'description':description, 'price':price, 'notes':notes, 'region':region, 'active':active, 'product_page':product_url, 'size':size, 'image': image_content}
-        coffees_updated, coffees_entered, error_coffees = add_or_update_coffee(coffee_data, coffees_updated, coffees_entered, error_coffees)
+        coffee_data = {
+            'name': name,
+            'roaster': roaster,
+            'description': description,
+            'price': price,
+            'notes': notes,
+            'region': region,
+            'active': active,
+            'product_page': product_url,
+            'size': size,
+            'image': image_content
+        }
+        coffees_updated, coffees_entered, error_coffees = add_or_update_coffee(
+            coffee_data, coffees_updated, coffees_entered, error_coffees)
 
-    logging.info('Victrola New Results:{} / {}'.format(coffees_entered, total_coffees))
-    logging.info('Victrola Updated Results:{} / {}'.format(coffees_updated, total_coffees))
+    logging.info('Victrola New Results:{} / {}'.format(coffees_entered,
+                                                       total_coffees))
+    logging.info('Victrola Updated Results:{} / {}'.format(coffees_updated,
+                                                           total_coffees))
     if error_coffees:
         logging.warning('Victrola Error coffees are: {}'.format(error_coffees))
