@@ -73,9 +73,10 @@ def scrape_victrola():
                 # can't find any tasting notes
                 notes = []
                 logging.info('No tasting notes for {}'.format(product_url))
-        image_url = coffee_soup.select_one('ul.bx-slider').select_one('img')[
-            'src']
-        image_content = requests.get("http:{}".format(image_url)).content
+        # slider image is too big so we're using the twitter one
+        # image_url = coffee_soup.select_one('ul.bx-slider').select_one('img')['src']
+        image_url = coffee_soup.find("meta", {"name": "twitter:image"})["content"]
+        image_content = requests.get(image_url).content
         coffee_data = {
             'name': name,
             'roaster': roaster,
@@ -88,6 +89,7 @@ def scrape_victrola():
             'size': size,
             'image': image_content
         }
+        print(image_url)
         coffees_updated, coffees_entered, error_coffees = add_or_update_coffee(
             coffee_data, coffees_updated, coffees_entered, error_coffees)
 
